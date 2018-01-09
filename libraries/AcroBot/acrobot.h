@@ -1,4 +1,4 @@
-/**************************************************************************
+/*************************************************************************
  *============= © 2018 LUIS FILIPE DIAS  - ALL RIGHTS RESERVED  =============
  ****************************************************************************
  *
@@ -101,6 +101,19 @@
 #define NO                                  0
 
 /**
+* @brief List of available sensors.
+*/
+#define HAS_SONAR
+#if 0
+    #define HAS_SHARP
+    #define HAS_PIR
+    #define HAS_TEMP
+    #define HAS_GAS
+    #define HAS_AIRQ
+    #define HAS_NOISE
+#endif
+
+/**
 * @brief Define WiFi support.
 */
 #define WIFI_SUPPORT                        NO
@@ -200,41 +213,6 @@
 #define MOTOR_PWMBWD_C                      MCPWM2B
 
 /**
-* @brief Value of lever in the middle (stop point) from Blynk.
-*/
-#define BLINK_LEVER_MID                     512
-
-/**
-* @brief Value of lever for left right adjustment.
-*/
-#define HORIZONTAL_MID_LEVER                50
-
-/**
-* @brief Value of lever maximum for left right adjustment.
-*/
-#define HORIZONTAL_MAX_LEVER                100
-
-/**
-* @brief Step for manual control of horizontal control.
-*/
-#define MOTOR_HORIZONTAL_STEP                1
-
-/**
-* @brief Step for manual control of vertical control.
-*/
-#define MOTOR_VERTICAL_STEP                  30
-
-/**
-* @brief Maximum value of motors.
-*/
-#define MOTOR_MAX_VALUE                      100
-
-/**
-* @brief To adjust difference of motors - hardcoded here.
-*/
-#define MOTOR_ADJ_PC                          9
-
-/**
 * @brief 10 seconds in ms.
 */
 #define TIME_10_SECONDS_MS                    8000
@@ -250,32 +228,6 @@
 #define MOTOR_AUTO_FWD                        20
 
 #define MOTOR_AUTO_FWD2                       25
-
-
-/**
-* @brief Auto mode WALL left power.
-*/
-#define MOTOR_AUTO_WALL_L                     45
-
-/**
-* @brief Auto mode WALL right power.
-*/
-#define MOTOR_AUTO_WALL_R                     0
-
-/**
-* @brief Auto mode GROUND power.
-*/
-#define MOTOR_AUTO_GROUND                     55
-
-/**
-* @brief Threshold for bottom sensor on auto mode.
-*/
-#define SENSE_BOTTOM                          40
-
-/**
-* @brief Threshold for front sensor on auto mode.
-*/
-#define SENSE_FRONT                           55
 
 /***************************************************************************
  * PUBLIC VARIABLES

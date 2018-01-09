@@ -39,7 +39,9 @@
 
 /* Foreign headerfiles */
 #include <acrobot.h>
-#include <AirQuality.h>
+#ifdef HAS_AIRQ
+    #include <AirQuality.h>
+#endif
 
 /* Own headerfiles */
 /* None */

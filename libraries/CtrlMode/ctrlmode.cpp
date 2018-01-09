@@ -32,6 +32,8 @@
 
 #include <stdlib.h>
 
+/* Must rethink this. */
+#if 0
 Motors        oMotorLeft  (E_MOTOR_LEFT, MOTOR_UNIT_A, MOTOR_TIMER_A, MOTOR_PWMFWD_A, MOTOR_PWMBWD_A, E_PIN_MOTORFWD_A, E_PIN_MOTORBWD_A);
 Motors        oMotorRight (E_MOTOR_RIGHT, MOTOR_UNIT_B, MOTOR_TIMER_B, MOTOR_PWMFWD_B, MOTOR_PWMBWD_B, E_PIN_MOTORFWD_B, E_PIN_MOTORBWD_B);
 Motors        oMotorBottom(E_MOTOR_BOTTOM, MOTOR_UNIT_C, MOTOR_TIMER_C, MOTOR_PWMFWD_C, MOTOR_PWMBWD_C, E_PIN_MOTORFWD_C, E_PIN_MOTORBWD_C);
@@ -39,12 +41,15 @@ Motors        oMotors[E_MOTOR_COUNT] = {oMotorLeft, oMotorRight, oMotorBottom};
 
 bool boIsWall = false;
 bool boIsWallToggle = true;
+#endif
 
 /***************************************************************************
  * C IMPLEMENTATION OF PRIVATE FUNCTIONS
  ****************************************************************************/
 tenError CtrlMode::enMotorsWrapper(float flSpeed[E_MOTOR_COUNT])
 {
+    /* Must rethink this. */
+    #if 0
     /* Init function with no error. */
     tenError enError = ERR_NONE;
 
@@ -73,22 +78,27 @@ tenError CtrlMode::enMotorsWrapper(float flSpeed[E_MOTOR_COUNT])
             break;
         }
     }
-
     return enError;
+    #endif
 }
 
 tenError CtrlMode::enManualCtrl(float flSpeed[E_MOTOR_COUNT])
 {
+    /* Must rethink this. */
+    #if 0
     /* Init function with no error. */
     tenError enError = ERR_NONE;
 
     printDebug("\n%s [%d]",__FUNCTION__, __LINE__);
 
     return CtrlMode::enMotorsWrapper(flSpeed);
+    #endif
 }
 
 tenError CtrlMode::enAutoCtrl(float flSenseFront, float flSenseBottom)
 {
+    /* Must rethink this. */
+    #if 0
     /* Init function with no error. */
     tenError enError = ERR_NONE;
 
@@ -150,10 +160,13 @@ tenError CtrlMode::enAutoCtrl(float flSenseFront, float flSenseBottom)
     }
 
     return enError;
+    #endif
 }
 
 tenError CtrlMode::enModeFwd(void)
 {
+    /* Must rethink this. */
+    #if 0
     float flSpeedZeros[E_MOTOR_COUNT] = {0, 0, 0};
     float flSpeedFwd[E_MOTOR_COUNT] = {MOTOR_AUTO_FWD, MOTOR_AUTO_FWD2, 0};
     float flSpeedWall[E_MOTOR_COUNT] = {-MOTOR_AUTO_FWD, MOTOR_AUTO_FWD2, 0};
@@ -195,10 +208,13 @@ tenError CtrlMode::enModeFwd(void)
     }
 
     return enError;
+    #endif
 }
 
 tenError CtrlMode::enModeRandom(void)
 {
+    /* Must rethink this. */
+    #if 0
     /* TODO: got to randomize this. */
     float flSpeed[E_MOTOR_COUNT] = {0, 0, 0};
     
@@ -206,19 +222,25 @@ tenError CtrlMode::enModeRandom(void)
 
     /* Go Random. */
     return CtrlMode::enMotorsWrapper(flSpeed);
+    #endif
 }
 
 tenError CtrlMode::enModeGround(void)
 {
+    /* Must rethink this. */
+    #if 0
     float flSpeed[E_MOTOR_COUNT] = {0, 0, MOTOR_AUTO_GROUND};
 
     printDebug("\n%s [%d]",__FUNCTION__, __LINE__);
 
     return CtrlMode::enMotorsWrapper(flSpeed);
+    #endif
 }
 
 tenError CtrlMode::enModeWall(void)
 {
+    /* Must rethink this. */
+    #if 0
     float flSpeedZeros[E_MOTOR_COUNT] = {0, 0, 0};
     float flSpeedFwd[E_MOTOR_COUNT] = {MOTOR_AUTO_FWD, MOTOR_AUTO_FWD2, 0};
     float flSpeedWall[E_MOTOR_COUNT] = {-MOTOR_AUTO_FWD, MOTOR_AUTO_FWD2, 0};
@@ -241,6 +263,7 @@ tenError CtrlMode::enModeWall(void)
     }
 
     return enError;
+    #endif
 }
 
 /***************************************************************************
@@ -248,12 +271,17 @@ tenError CtrlMode::enModeWall(void)
  ****************************************************************************/
 CtrlMode::CtrlMode(void)
 {
+    /* Must rethink this. */
+    #if 0
     /* Left-right motor adjustment. */
     flAdj = 1 + (float)(MOTOR_ADJ_PC)/100;
+    #endif
 }
 
 tenError CtrlMode::enSetCtrl(bool boIsAuto, float flSpeed[E_MOTOR_COUNT], float flSenseFront, float flSenseBottom)
 {
+    /* Must rethink this. */
+    #if 0
     /* Init function with no error. */
     tenError enError = ERR_NONE;
 
@@ -269,6 +297,5 @@ tenError CtrlMode::enSetCtrl(bool boIsAuto, float flSpeed[E_MOTOR_COUNT], float 
     }
 
     return enError;
+    #endif
 }
-
-

@@ -44,10 +44,12 @@ Maxbotix rangeSensors[E_SONAR_COUNT-1] = {rangeSensorPWA, rangeSensorPWB};
 */
 bool boMovement = false;
 
-/**
-* @brief Quality sensor object.
-*/
-AirQuality oAirQualitySensor;
+#ifdef HAS_AIRQ
+    /**
+    * @brief Quality sensor object.
+    */
+    AirQuality oAirQualitySensor;
+#endif
 
 /**
 * @brief Holds the quality measured and calculated.
@@ -76,6 +78,7 @@ void __int_readPIR__(void)
  ****************************************************************************/
 tenError MySensors::enReadSharp(void)
 {
+#ifdef HAS_SHARP
     int enReadSharp = 0;
 
     printDebug("\n%s [%d]",__FUNCTION__, __LINE__);
@@ -112,20 +115,15 @@ tenError MySensors::enReadSharp(void)
     printInfo("\nDistance Sharp: %dcm", stSensors.iDistSharp);
 
     return ERR_NONE;
+#else
+    printWarning("\nenReadSharp NOT_IMPLEMENTED");
+    return ERR_NONE;
+#endif
 }
 
-void printArray(float* array, uint8_t array_size) {
-  Serial.print("[");
-  for (int i = 0; i < array_size; i++) {
-    Serial.print(array[i]);
-    if (i != array_size - 1) {
-      Serial.print(", ");
-    }
-  }
-  Serial.print("]");
-}
 tenError MySensors::enReadSonar(char chSonarID)
 {
+#ifdef HAS_SONAR
     printDebug("\n%s [%d]",__FUNCTION__, __LINE__);
 
     stSensors.aflDistSonar[chSonarID] = rangeSensors[chSonarID].getRange();
@@ -135,13 +133,17 @@ tenError MySensors::enReadSonar(char chSonarID)
     stSensors.aflDistSonar[chSonarID] = (stSensors.aflDistSonar[chSonarID] > 150) ? 150 : stSensors.aflDistSonar[chSonarID];
 
     printInfo("\nDistance Sonar %d: %2.2fcm", chSonarID, stSensors.aflDistSonar[chSonarID]);
-    // printf("\nDistance Sonar %d: %2.2fcm", chSonarID, stSensors.aflDistSonar[chSonarID]);
 
     return ERR_NONE;
+#else
+    printWarning("\nenReadSonar NOT_IMPLEMENTED");
+    return ERR_NONE;
+#endif
 }
 
 tenError MySensors::enReadPIR(void)
 {
+#ifdef HAS_PIR
     printDebug("\n%s [%d]",__FUNCTION__, __LINE__);
 
     /* Set the local structure flag according to detection. */
@@ -159,10 +161,15 @@ tenError MySensors::enReadPIR(void)
     printInfo("\nMovement: %s", (stSensors.boMovement ? "False" : "True"));
 
     return ERR_NONE;
+#else
+    printWarning("\nenReadPIR NOT_IMPLEMENTED");
+    return ERR_NONE;
+#endif
 }
 
 tenError MySensors::enReadTemp(void)
 {
+#ifdef HAS_TEMP
     float fR;
     int iReadTemp = 0;
 
@@ -194,10 +201,15 @@ tenError MySensors::enReadTemp(void)
     printInfo("\nTemperature: %.1fC", stSensors.flTemperature);
 
     return ERR_NONE;
+#else
+    printWarning("\nenReadTemp NOT_IMPLEMENTED");
+    return ERR_NONE;
+#endif
 }
 
 tenError MySensors::enReadAirQuality(void)
 {
+#ifdef HAS_AIRQ
     /* Get quality from slope, to get air quality. */
     int iCurrentQuality = oAirQualitySensor.slope();
     
@@ -244,10 +256,15 @@ tenError MySensors::enReadAirQuality(void)
     }
 
     return ERR_NONE;
+#else
+    printWarning("\nenReadAirQuality NOT_IMPLEMENTED");
+    return ERR_NONE;
+#endif
 }
 
 tenError MySensors::enReadGasSensor(void)
 {
+#ifdef HAS_GAS
     /* R0 determined empirically by using clean air.
     See link below or more information:
     http://wiki.seeed.cc/Grove-Gas_Sensor-MQ2/ */
@@ -278,10 +295,15 @@ tenError MySensors::enReadGasSensor(void)
     printInfo("\nGas: %.1f", stSensors.flGas);
 
     return ERR_NONE;
+#else
+    printWarning("\nenReadGasSensor NOT_IMPLEMENTED");
+    return ERR_NONE;
 }
+#endif
 
 tenError MySensors::enReadNoise(void)
 {
+#ifdef HAS_NOISE
     long lNoise = 0;
 
     printDebug("\n%s [%d]",__FUNCTION__, __LINE__);
@@ -302,6 +324,10 @@ tenError MySensors::enReadNoise(void)
     printInfo("\nNoise: %.1f", stSensors.bNoise);
 
     return ERR_NONE;
+#else
+    printWarning("\nenReadNoise NOT_IMPLEMENTED");
+    return ERR_NONE;
+#endif
 }
 
 /***************************************************************************
@@ -312,14 +338,25 @@ MySensors::MySensors(void)
     printDebug("\n%s [%d]",__FUNCTION__, __LINE__);
 
     /* Set input pins. */
-    pinMode(E_PIN_PIR,      INPUT);
-    pinMode(E_PIN_GAS,      INPUT);
-    pinMode(E_PIN_SHARP,    INPUT);
-    pinMode(E_PIN_SONAR_A,  INPUT);
-    pinMode(E_PIN_SONAR_B,  INPUT);
-
-    /* Attach interrupt to detect when PIR pin is high. */
-    attachInterrupt(digitalPinToInterrupt(E_PIN_PIR), __int_readPIR__, HIGH);
+    #ifdef HAS_PIR
+        pinMode(E_PIN_PIR,      INPUT);
+    #endif
+    #ifdef HAS_GAS
+        pinMode(E_PIN_GAS,      INPUT);
+    #endif
+    #ifdef HAS_SHARP
+        pinMode(E_PIN_SHARP,    INPUT);
+    #endif
+    #ifdef HAS_SONAR
+        pinMode(E_PIN_SONAR_A,  INPUT);
+    #endif
+    #ifdef HAS_SONAR
+        pinMode(E_PIN_SONAR_B,  INPUT);
+    #endif
+    #ifdef HAS_PIR
+        /* Attach interrupt to detect when PIR pin is high. */
+        attachInterrupt(digitalPinToInterrupt(E_PIN_PIR), __int_readPIR__, HIGH);
+    #endif
 }
 
 tenError MySensors::enProcessSensors(void)
@@ -409,6 +446,7 @@ tenError MySensors::enProcessSensors(void)
 
 tenError MySensors::enReadAirQualityUpdate(void)
 {
+#ifdef HAS_AIRQ
     printDebug("\n%s [%d]",__FUNCTION__, __LINE__);
 
     /* Collect the air reading as per the timed reading. */
@@ -416,7 +454,7 @@ tenError MySensors::enReadAirQualityUpdate(void)
     oAirQualitySensor.first_vol = analogRead(E_PIN_AIRQ); // change this value if you use another A port
     oAirQualitySensor.counter = 0;
     oAirQualitySensor.timer_index = 1;
-
+#endif
     return ERR_NONE;
 }
 
