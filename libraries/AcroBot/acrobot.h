@@ -77,15 +77,15 @@
 /**
 * @brief WiFi Data.
 */
-    #define WIFI_USER                           "AndroidAP3445"
-    #define WIFI_PASSWORD                       "65c32f94cba4"
-#if 0
-    #define WIFI_USER                           "CSW-Guest"
-    #define WIFI_PASSWORD                       "Critical98"
-#define WIFI_USER                           "ThomsonD223E7"
-#define WIFI_PASSWORD                       "60ED2539CA"
 #define WIFI_USER                           "CASA LT"
 #define WIFI_PASSWORD                       "felgueiras"
+#if 0
+#define WIFI_USER                           "AndroidAP3445"
+#define WIFI_PASSWORD                       "65c32f94cba4"
+#define WIFI_USER                           "CSW-Guest"
+#define WIFI_PASSWORD                       "Critical98"
+#define WIFI_USER                           "ThomsonD223E7"
+#define WIFI_PASSWORD                       "60ED2539CA"
 #define WIFI_USER                           "Vodafone-DE0235"
 #define WIFI_PASSWORD                       "FD91B1958E"
 #define WIFI_USER                           "MyAquaris"
@@ -103,8 +103,9 @@
 /**
 * @brief List of available sensors.
 */
-#define HAS_SONAR
+#define HAS_MPU
 #if 0
+    #define HAS_SONAR
     #define HAS_SHARP
     #define HAS_PIR
     #define HAS_TEMP
@@ -290,6 +291,7 @@ typedef enum
 {
     E_READ_PIR                            = 0,
     E_READ_GAS,
+    E_READ_MPU,
     E_READ_TEMP,
     E_READ_SONAR,
     E_READ_SHARP,
@@ -303,12 +305,15 @@ typedef enum
 */
 typedef enum
 {
-    E_PIN_GAS                           = 34,
-    E_PIN_PIR                           = 25,
-    E_PIN_TEMP                          = 35,
-    E_PIN_AIRQ                          = 33,
-    E_PIN_NOISE                         = 36,
-    E_PIN_SHARP                         = 32,
+    // E_PIN_GAS                           = 34,
+    // E_PIN_PIR                           = 25,
+    /* Use the PIR interrupt, for now... */
+    E_PIN_MPU_INTERRUPT                    = 25,
+
+    // E_PIN_TEMP                          = 35,
+    // E_PIN_AIRQ                          = 33,
+    // E_PIN_NOISE                         = 36,
+    // E_PIN_SHARP                         = 32,
     E_PIN_SONAR_A                       = 26,
     E_PIN_SONAR_B                       = 27,
     E_PIN_SONAR_C                       = 14,

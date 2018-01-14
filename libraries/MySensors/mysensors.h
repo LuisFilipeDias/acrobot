@@ -43,6 +43,10 @@
     #include <AirQuality.h>
 #endif
 
+#ifdef HAS_MPU
+    #include "MPU6050_6Axis_MotionApps20.h"
+#endif
+
 /* Own headerfiles */
 /* None */
 
@@ -82,6 +86,7 @@ typedef struct{
     int    iDistSharp;
     float  aflDistSonar[E_SONAR_COUNT];
     float  flTemperature;
+    float  flAnglePitch;
 } tstSensors;
 
 class MySensors{
@@ -138,6 +143,20 @@ class MySensors{
         */
         tenError enReadNoise(void);
 
+        /**
+        * @brief Read MPU sensor.
+        *
+        * @returns Error code.
+        */
+        tenError enReadMPU(void);
+
+        /**
+        * @brief Setup MPU sensor.
+        *
+        * @returns Error code.
+        */
+        tenError enSetupMPU(void);
+
     public:
         /**
         * @brief Class constructor.
@@ -182,6 +201,13 @@ class MySensors{
         * @returns Sonar C distance value.
         */
         float flGetSonarC(void);
+
+        /**
+        * @brief Get MPU pitch angle.
+        *
+        * @returns Angle in degrees.
+        */
+        float flGetAnglePitch(void);
 
         /**
         * @brief The sensors state machine, that iterates over every sensor read function.

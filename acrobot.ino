@@ -175,7 +175,7 @@ void setup()
 
     /* Setup Wifi -> cannot be initiated via constructor, else it crashes. */
     enError = oWifi.enWifiSetup();
-    
+
     if (ERR_NONE == enError)
     {
         /* No Queue is needed for now. */
