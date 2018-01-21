@@ -30,8 +30,6 @@
 /* Own headerfiles */
 #include <ctrlmode.h>
 
-#include <stdlib.h>
-
 /* Must rethink this. */
 #if 0
 Motors        oMotorLeft  (E_MOTOR_LEFT, MOTOR_UNIT_A, MOTOR_TIMER_A, MOTOR_PWMFWD_A, MOTOR_PWMBWD_A, E_PIN_MOTORFWD_A, E_PIN_MOTORBWD_A);
@@ -42,6 +40,17 @@ Motors        oMotors[E_MOTOR_COUNT] = {oMotorLeft, oMotorRight, oMotorBottom};
 bool boIsWall = false;
 bool boIsWallToggle = true;
 #endif
+
+double dblOriSetpoint = 173;
+double dblSetpoint = dblOriSetpoint;
+double dblInput, dblOutput;
+
+//adjust these values to fit your own design
+double Kp = 50;   
+double Kd = 1.4;
+double Ki = 60;
+
+PID oPID(&dblInput, &dblInput, &dblSetpoint, Kp, Ki, Kd, DIRECT);
 
 /***************************************************************************
  * C IMPLEMENTATION OF PRIVATE FUNCTIONS
@@ -276,6 +285,11 @@ CtrlMode::CtrlMode(void)
     /* Left-right motor adjustment. */
     flAdj = 1 + (float)(MOTOR_ADJ_PC)/100;
     #endif
+
+    /* Setup oPID. */
+    oPID.SetMode(AUTOMATIC);
+    oPID.SetSampleTime(10);
+    oPID.SetOutputLimits(-255, 255); 
 }
 
 tenError CtrlMode::enSetCtrl(bool boIsAuto, float flSpeed[E_MOTOR_COUNT], float flSenseFront, float flSenseBottom)
@@ -298,4 +312,12 @@ tenError CtrlMode::enSetCtrl(bool boIsAuto, float flSpeed[E_MOTOR_COUNT], float 
 
     return enError;
     #endif
+}
+
+tenError CtrlMode::enSetPID(float flAngle)
+{
+    dblInput = (double) flAngle;
+
+    /* Set oPID and save oPID configuration here. */
+    oPID.Compute();
 }

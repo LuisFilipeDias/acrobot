@@ -155,7 +155,7 @@
 /**
 * @brief Sensors task delay between iterations.
 */
-#define DELAY_TASK_SENSORS_MS               50
+#define DELAY_TASK_SENSORS_MS               1
 
 /**
 * @brief Upload task delay between iterations.
@@ -280,6 +280,7 @@ typedef enum
 {
     E_INIT                                  = 0,
     E_SET_MOTORS,
+    E_SET_PID,
     E_GET_CTRL_CMD,
     E_REFRESH_DISPLAY,
 } tenState;

@@ -39,6 +39,7 @@ THE SOFTWARE.
 
 #define I2C_NUM I2C_NUM_0
 
+/* LFD workaraound. 
 void MPU6050::ReadRegister(uint8_t reg, uint8_t *data, uint8_t len){
 	uint8_t dev = 0x68;
 	i2c_cmd_handle_t cmd;
@@ -57,7 +58,7 @@ void MPU6050::ReadRegister(uint8_t reg, uint8_t *data, uint8_t len){
 	ESP_ERROR_CHECK(i2c_master_cmd_begin(I2C_NUM, cmd, 1000));
 	i2c_cmd_link_delete(cmd);
 }
-
+*/
 
 /** Default constructor, uses default I2C address.
  * @see MPU6050_DEFAULT_ADDRESS
@@ -84,10 +85,16 @@ MPU6050::MPU6050(uint8_t address) {
  * the default internal clock source.
  */
 void MPU6050::initialize() {
+    printf("\n%s [%d]",__FUNCTION__, __LINE__);
+
     setClockSource(MPU6050_CLOCK_PLL_XGYRO);
+    printf("\n%s [%d]",__FUNCTION__, __LINE__);
     setFullScaleGyroRange(MPU6050_GYRO_FS_250);
+    printf("\n%s [%d]",__FUNCTION__, __LINE__);
     setFullScaleAccelRange(MPU6050_ACCEL_FS_2);
+    printf("\n%s [%d]",__FUNCTION__, __LINE__);
     setSleepEnabled(false); // thanks to Jack Elston for pointing this one out!
+    printf("\n%s [%d]",__FUNCTION__, __LINE__);
 }
 
 /** Verify the I2C connection.
@@ -3088,7 +3095,7 @@ bool MPU6050::writeMemoryBlock(const uint8_t *data, uint16_t dataSize, uint8_t b
 
         // verify data if needed
         if (verify && verifyBuffer) {
-        	printf("VERIFY\n");
+        	// printf("VERIFY\n");
             setMemoryBank(bank);
             setMemoryStartAddress(address);
             I2Cdev::readBytes(devAddr, MPU6050_RA_MEM_R_W, chunkSize, verifyBuffer);
