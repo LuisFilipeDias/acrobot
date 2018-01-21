@@ -274,9 +274,6 @@ tenError MySensors::enReadMPU(void)
 
                 stSensors.flAnglePitch = flYPR[1] * 180/M_PI;
                 printf("\nflYPR[1] - Pitch: %2.2f\t", stSensors.flAnglePitch);
-
-                /* He's alive...*/
-                digitalWrite(E_BLUE_LED, false);
             }
         }
     }

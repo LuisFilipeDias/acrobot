@@ -1,5 +1,6 @@
 // #define BUFFER_LENGTH I2C_BUFFER_LENGTH
-#define BUFFER_LENGTH 16
+/* Be careful, if sometimes the sensor crashes, use buffer length 16 instead. */
+#define BUFFER_LENGTH 30
 
 // I2Cdev library collection - Main I2C device class
 // Abstracts bit and byte I2C R/W functions into a convenient class
