@@ -46,7 +46,7 @@ double dblSetpoint = dblOriSetpoint;
 double dblInput, dblOutput;
 
 //adjust these values to fit your own design
-double Kp = 50;   
+double Kp = 50;
 double Kd = 1.4;
 double Ki = 60;
 

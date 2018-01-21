@@ -172,7 +172,6 @@ tenError MySensors::enSetupMPU(void)
     /* Initialize device. */
     printf("\nInitializing I2C devices...");
     oMPU.initialize();
-    pinMode(E_PIN_MPU_INTERRUPT, INPUT);
 
     /* Verify connection. */
     printf("\nTesting device connections...");
@@ -193,8 +192,6 @@ tenError MySensors::enSetupMPU(void)
         /* Turn on the DMP, now that it's ready. */
         oMPU.setDMPEnabled(true);
 
-        /* Enable Arduino interrupt detection. */
-        attachInterrupt(digitalPinToInterrupt(E_PIN_MPU_INTERRUPT), __int_dmpDataReadyPIR__, HIGH);
         chMPUIntStatus = oMPU.getIntStatus();
 
         /* Set our DMP Ready flag so the main loop() function knows it's okay to use it. */
@@ -277,6 +274,9 @@ tenError MySensors::enReadMPU(void)
 
                 stSensors.flAnglePitch = flYPR[1] * 180/M_PI;
                 printf("\nflYPR[1] - Pitch: %2.2f\t", stSensors.flAnglePitch);
+
+                /* He's alive...*/
+                digitalWrite(E_BLUE_LED, false);
             }
         }
     }
@@ -535,9 +535,6 @@ MySensors::MySensors(void)
     printDebug("\n%s [%d]",__FUNCTION__, __LINE__);
 
     /* Set input pins. */
-    #ifdef HAS_PIR
-        pinMode(E_PIN_PIR,      INPUT);
-    #endif
     #ifdef HAS_GAS
         pinMode(E_PIN_GAS,      INPUT);
     #endif
@@ -551,13 +548,16 @@ MySensors::MySensors(void)
         pinMode(E_PIN_SONAR_B,  INPUT);
     #endif
     #ifdef HAS_PIR
+        pinMode(E_PIN_PIR, INPUT);
         /* Attach interrupt to detect when PIR pin is high. */
         attachInterrupt(digitalPinToInterrupt(E_PIN_PIR), __int_readPIR__, HIGH);
     #endif
-    // #ifdef HAS_MPU
-    //     /* Attach interrupt to detect when PIR pin is high. */
-    //     attachInterrupt(digitalPinToInterrupt(E_PIN_MPU), __int_readPIR__, HIGH);
-    // #endif
+    #ifdef HAS_MPU
+        pinMode(E_PIN_MPU_INTERRUPT, INPUT);
+        /* Attach interrupt to detect when PIR pin is high. */
+        attachInterrupt(digitalPinToInterrupt(E_PIN_MPU_INTERRUPT), __int_dmpDataReadyPIR__, RISING);
+    #endif
+
 }
 
 tenError MySensors::enProcessSensors(void)
@@ -573,11 +573,9 @@ tenError MySensors::enProcessSensors(void)
 
     /* Cycle through all states until an invalid state is found. */
     printDebug("\n%s [%d]",__FUNCTION__, __LINE__);
-    printf("\n%s [%d]",__FUNCTION__, __LINE__);
 
     /* Consider moving this to constructor, after getting this to work. */
     #ifdef HAS_MPU
-        printf("\n%s [%d]",__FUNCTION__, __LINE__);
         if( ERR_NONE != enSetupMPU())
         {
             printError("\nError setting up the MTU.");

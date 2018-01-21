@@ -15,7 +15,7 @@
  *  @section DESCRIPTION
  *  
  *  This is the main project and source file. It triggers the tasks that handle
- *  each of the operations: database communication, sensor reading, motor setting,
+  *  each of the operations: database communication, sensor reading, motor setting,
  *  among others. It also contains the code for the timers configuration 
  *  and execution.
  *
@@ -36,6 +36,7 @@
 #include <mysensors.h>
 #include <ctrlmode.h>
 #include <SimpleBLE.h>
+#include <Wire.h>
 
 /* Own headerfiles */
 #include <acrobot.h>
@@ -222,14 +223,6 @@ void setup()
             printError("\nERROR: Creating vTaskUploadData.");
         }
         #endif
-        else
-        {
-            /* This block was causing trouble, not yet investigated. */
-            #if 0
-                Serial.begin(115200);
-                Serial.println("Connected!");
-            #endif
-        }
     }
 
     /* Something went wrong. Terminate now. */
@@ -279,8 +272,15 @@ void vTaskMotors(void *parameter)
             #endif
                 enState = E_SET_MOTORS;
                 break;
+            case E_SET_PID:
+                oCtrlMode.enSetPID(oSensors.flGetAnglePitch());
+                enState = E_SET_PID;
+                break;
             case E_SET_MOTORS:
-                
+                /* TODO: use as input, the left-right control, and the setpoint. See below for a more complex approach. */
+
+
+                /* Setup using the PID retrieved values. */
                 // /* Set the motors control, note that mode is set internally, so pass all the info at this level. */
                 // enError = oCtrlMode.enSetCtrl(boIsAuto, flSpeedAdj, oSensors.flGetSonarA(), oSensors.flGetSonarC());
 
@@ -335,6 +335,8 @@ void vTaskUploadData(void *parameter)
     vTaskDelete(NULL);
 }
 #endif
+
+
 
 void loop(void)
 {
