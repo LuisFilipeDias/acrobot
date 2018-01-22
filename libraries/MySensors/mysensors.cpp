@@ -25,16 +25,15 @@
 /* None */
 
 /* Foreign headerfiles */
-/* None */
 
 /* Own headerfiles */
 #include "mysensors.h"
 
-#include "Maxbotix.h"
-
-Maxbotix oRangeSensorPWA(E_PIN_SONAR_A, Maxbotix::PW, Maxbotix::LV, Maxbotix::SIMPLE);
-Maxbotix oRangeSensorPWB(E_PIN_SONAR_C, Maxbotix::PW, Maxbotix::LV, Maxbotix::SIMPLE);
-Maxbotix oRangeSensors[E_SONAR_COUNT-1] = {oRangeSensorPWA, oRangeSensorPWB};
+#ifdef HAS_SONAR
+    Maxbotix oRangeSensorPWA(E_PIN_SONAR_A, Maxbotix::PW, Maxbotix::LV, Maxbotix::SIMPLE);
+    Maxbotix oRangeSensorPWB(E_PIN_SONAR_C, Maxbotix::PW, Maxbotix::LV, Maxbotix::SIMPLE);
+    Maxbotix oRangeSensors[E_SONAR_COUNT-1] = {oRangeSensorPWA, oRangeSensorPWB};
+#endif
 
 /***************************************************************************
  * LOCAL VARIABLES 
@@ -59,92 +58,234 @@ int iCurrentQuality = -1;
 /**************************************************************************************/
 /****************************** MPU-related variables. ********************************/
 /**************************************************************************************/
-/**
-* @brief MPU object.
-*/
-MPU6050 xMPU;
+#ifdef HAS_MPU
+    /**
+    * @brief MPU object.
+    */
+    MPU6050 oMPU(0x69);
 
-/**
-* @brief Return status after each device operation (0 = success, !0 = error).
-*/
-char chDevStatus;
+    /**
+    * @brief Return status after each device operation (0 = success, !0 = error).
+    */
+    char chDevStatus;
 
-/**
-* @brief Holds actual interrupt status byte from MPU.
-*/
-char chMPUIntStatus;
+    /**
+    * @brief Holds actual interrupt status byte from MPU.
+    */
+    char chMPUIntStatus;
 
-/**
-* @brief Set true if DMP init was successful.
-*/
-bool boDmpReady = false;
+    /**
+    * @brief Set true if DMP init was successful.
+    */
+    bool boDmpReady = false;
 
-/**
-* @brief Expected DMP packet size (default is 42 bytes).
-*/
-int iPacketSize;
+    /**
+    * @brief Expected DMP packet size (default is 42 bytes).
+    */
+    int iPacketSize;
 
-/**
-* @brief Count of all bytes currently in FIFO.
-*/
-int iFifoCount;
+    /**
+    * @brief Count of all bytes currently in FIFO.
+    */
+    int iFifoCount;
 
-/**
-* @brief FIFO storage buffer.
-*/
-uint8_t chFifoBuffer[64];
+    /**
+    * @brief FIFO storage buffer.
+    */
+    uint8_t chFifoBuffer[64];
 
-/**
-* @brief xGravity vector [x, y, z].
-*/
-VectorFloat xGravity;
+    /**
+    * @brief xGravity vector [x, y, z].
+    */
+    VectorFloat xGravity;
 
-/**
-* @brief Yaw/pitch/roll container [yaw, pitch, roll].
-*/
-float flYPR[3];
+    /**
+    * @brief Yaw/pitch/roll container [yaw, pitch, roll].
+    */
+    float flYPR[3];
 
-/**
-* @brief Quaternion container [w, x, y, z].
-*/
-Quaternion xQuaternion;
+    /**
+    * @brief Quaternion container [w, x, y, z].
+    */
+    Quaternion xQuaternion;
 
-/**
-* @brief Indicates whether MPU interrupt pin has gone high.
-*/
-volatile bool xMPUInterrupt = false; 
+    /**
+    * @brief Indicates whether MPU interrupt pin has gone high.
+    */
+    volatile bool oMPUInterrupt = false; 
+#endif
 
 /***************************************************************************
  * DECLARATION OF ISRs (MUST BE LOCAL) 
  ****************************************************************************/
-/**
-* @brief Internal ISR to check for DMP data availability.
-*/
-void __int_dmpDataReadyPIR__(void);
+#ifdef HAS_PIR
+    /**
+    * @brief Internal ISR for PIR pin transitions.
+    */
+    void __int_readPIR__(void);
+#endif
 
-/**
-* @brief Internal ISR for PIR pin transitions.
-*/
-void __int_readPIR__(void);
-
-/***************************************************************************
- * IMPLEMENTATION OF PRIVATE FUNCTIONS
- ****************************************************************************/
-void __int_readPIR__(void)
-{
-    /* If interrupt was triggered, means movement was detected. */
-    boMovement = true;
-}
-
-void __int_dmpDataReadyPIR__()
-{
-    /* DMP data is ready. */
-    xMPUInterrupt = true;
-}
+#ifdef HAS_MPU
+    /**
+    * @brief Internal ISR to check for DMP data availability.
+    */
+    void __int_dmpDataReadyPIR__(void);
+#endif
 
 /***************************************************************************
  * IMPLEMENTATION OF PRIVATE FUNCTIONS
  ****************************************************************************/
+#ifdef HAS_PIR
+    void __int_readPIR__(void)
+    {
+        /* If interrupt was triggered, means movement was detected. */
+        boMovement = true;
+    }
+#endif
+
+#ifdef HAS_MPU
+    void __int_dmpDataReadyPIR__()
+    {
+        /* DMP data is ready. */
+        oMPUInterrupt = true;
+    }
+#endif
+
+/***************************************************************************
+ * IMPLEMENTATION OF PRIVATE FUNCTIONS
+ ****************************************************************************/
+tenError MySensors::enSetupMPU(void)
+{
+    /* Init function with no error. */
+    tenError enError = ERR_NONE;
+
+#ifdef HAS_MPU
+    // join I2C bus (I2Cdev library doesn't do this automatically)
+    #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
+        Wire.begin();
+        // Wire.setClock(400000); // 400kHz I2C clock. Comment this line if having compilation difficulties
+        Wire.setClock(100000); // 400kHz I2C clock. Comment this line if having compilation difficulties
+    #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
+        Fastwire::setup(400, true);
+    #endif
+
+    /* Initialize device. */
+    printf("\nInitializing I2C devices...");
+    oMPU.initialize();
+
+    /* Verify connection. */
+    printf("\nTesting device connections...");
+    oMPU.testConnection() ? printDebug("\nMPU6050 connection successful") : printDebug("\nMPU6050 connection failed");
+
+    printf("\nInitializing DMP...");
+    chDevStatus = oMPU.dmpInitialize();
+
+    /* Supply your own gyro offsets here, scaled for min sensitivity. */
+    oMPU.setXGyroOffset(220);
+    oMPU.setYGyroOffset(76);
+    oMPU.setZGyroOffset(-85);
+    oMPU.setZAccelOffset(1788); // 1688 factory default for my test chip. */
+
+     /* Make sure it worked (returns 0 if so). */
+     if (ERR_NONE == chDevStatus)
+     {
+        /* Turn on the DMP, now that it's ready. */
+        oMPU.setDMPEnabled(true);
+
+        chMPUIntStatus = oMPU.getIntStatus();
+
+        /* Set our DMP Ready flag so the main loop() function knows it's okay to use it. */
+        boDmpReady = true;
+
+        /* Get expected DMP packet size for later comparison. */
+        iPacketSize = oMPU.dmpGetFIFOPacketSize();
+     }
+     else
+     {
+         /* ERROR!
+         1 = initial memory load failed
+         2 = DMP configuration updates failed
+         (if it's going to break, usually the code will be 1). */
+         printError("\nDMP Initialization failed.");
+     }
+#endif
+     return enError;
+}
+
+tenError MySensors::enReadMPU(void)
+{
+#ifdef HAS_MPU
+    printDebug("\n%s [%d]",__FUNCTION__, __LINE__);
+
+    /* If programming failed, don't try to do anything. */
+    if (!boDmpReady)
+    {
+        printError("\nDMP programming failed!");
+        /* Let's not kill the program here, and let it try again. */
+        return ERR_NONE;
+    }
+    /* Wait for MPU interrupt or extra packet(s) available. */
+    else
+    {
+        if (!oMPUInterrupt && iFifoCount < iPacketSize)
+        {  
+            /* Go back, ther is no information from previous interrupt,
+            nor is there information still to be processed. */
+            printDebug("\nNot yet an interrupt generated.");
+            return ERR_NONE;
+        }
+        else
+        {
+            /* Reset interrupt flag and get INT_STATUS byte. */
+            oMPUInterrupt = false;
+
+            chMPUIntStatus = oMPU.getIntStatus();
+
+            /* Get current FIFO count. */
+            iFifoCount = oMPU.getFIFOCount();
+
+            /* Check for overflow (this should never happen unless our code is too inefficient). */
+            if ((chMPUIntStatus & 0x10) || iFifoCount == 1024)
+            {
+                /* Reset so we can continue cleanly. */
+                oMPU.resetFIFO();
+                printDebug("\nFIFO overflow!");
+            }
+            /* Otherwise, check for DMP data ready interrupt (this should happen frequently) */
+            else if (chMPUIntStatus & 0x02)
+            {
+                /* Wait for correct available data length, should be a VERY short wait. */
+                while (iFifoCount < iPacketSize)
+                {
+                    iFifoCount = oMPU.getFIFOCount();
+                }
+
+                /* Read a packet from FIFO. */
+                oMPU.getFIFOBytes(chFifoBuffer, iPacketSize);
+                
+                /* Track FIFO count here in case there is > 1 packet available
+                (this lets us immediately read more without waiting for an interrupt). */
+                iFifoCount -= iPacketSize;
+
+                /* Display Euler angles in degrees. */
+                oMPU.dmpGetQuaternion(&xQuaternion, chFifoBuffer);
+                oMPU.dmpGetGravity(&xGravity, &xQuaternion);
+                oMPU.dmpGetYawPitchRoll(flYPR, &xQuaternion, &xGravity);
+
+                stSensors.flAnglePitch = flYPR[1] * 180/M_PI;
+                printf("\nflYPR[1] - Pitch: %2.2f\t", stSensors.flAnglePitch);
+
+                /* He's alive...*/
+                digitalWrite(E_BLUE_LED, false);
+            }
+        }
+    }
+#else
+    // printWarning("\nenReadMPU NOT_IMPLEMENTED");
+#endif
+    return ERR_NONE;
+}
+
 tenError MySensors::enReadSharp(void)
 {
 #ifdef HAS_SHARP
@@ -385,144 +526,6 @@ tenError MySensors::enReadNoise(void)
     return ERR_NONE;
 }
 
-tenError MySensors::enReadMPU(void)
-{
-#ifdef HAS_MPU
-    printDebug("\n%s [%d]",__FUNCTION__, __LINE__);
-
-    /* If programming failed, don't try to do anything. */
-    if (!boDmpReady)
-    {
-        printError("\nDMP programming failed!");
-        /* Let's not kill the program here, and let it try again. */
-        return ERR_NONE;
-    }
-    /* Wait for MPU interrupt or extra packet(s) available. */
-    else
-    {
-        #if 0 /* Uncomment afterwards for PID config - let us first and foremost print angles... */
-        /* Consider moving this out of sensors lib, and simply, just simply, report ANGLES!!!!!!!!! */
-        //no mpu data - performing PID calculations and output to motors 
-        pid.Compute();
-        motorController.move(output, MIN_ABS_SPEED);
-        #endif
-
-        if (!xMPUInterrupt && iFifoCount < iPacketSize)
-        {  
-            /* Go back, ther is no information from previous interrupt,
-            nor is there information still to be processed. */
-            printWarning("\nNot yet an interrupt generated.");
-            return ERR_NONE;
-        }
-        else
-        {
-            /* Reset interrupt flag and get INT_STATUS byte. */
-            xMPUInterrupt = false;
-
-            chMPUIntStatus = xMPU.getIntStatus();
-
-            /* Get current FIFO count. */
-            iFifoCount = xMPU.getFIFOCount();
-
-            /* Check for overflow (this should never happen unless our code is too inefficient). */
-            if ((chMPUIntStatus & 0x10) || iFifoCount == 1024)
-            {
-                /* Reset so we can continue cleanly. */
-                xMPU.resetFIFO();
-                printDebug("\nFIFO overflow!");
-            }
-            /* Otherwise, check for DMP data ready interrupt (this should happen frequently) */
-            else if (chMPUIntStatus & 0x02)
-            {
-                /* Wait for correct available data length, should be a VERY short wait. */
-                while (iFifoCount < iPacketSize)
-                {
-                    iFifoCount = xMPU.getFIFOCount();
-                }
-
-                /* Read a packet from FIFO. */
-                xMPU.getFIFOBytes(chFifoBuffer, iPacketSize);
-                
-                /* Track FIFO count here in case there is > 1 packet available
-                (this lets us immediately read more without waiting for an interrupt). */
-                iFifoCount -= iPacketSize;
-
-                /* Display Euler angles in degrees. */
-                xMPU.dmpGetQuaternion(&xQuaternion, chFifoBuffer);
-                xMPU.dmpGetGravity(&xGravity, &xQuaternion);
-                xMPU.dmpGetYawPitchRoll(flYPR, &xQuaternion, &xGravity);
-
-                stSensors.flAnglePitch = flYPR[1] * 180/M_PI;
-                printDebug("flYPR[1] - Pitch: %2.2f\t", stSensors.flAnglePitch);
-            }
-        }
-    }
-#else
-    printWarning("\nenReadMPU NOT_IMPLEMENTED");
-#endif
-    return ERR_NONE;
-}
-
-tenError MySensors::enSetupMPU(void)
-{
-    /* Init function with no error. */
-    tenError enError = ERR_NONE;
-
-#ifdef HAS_MPU
-    printDebug("\n%s [%d]",__FUNCTION__, __LINE__);
-
-    /* Initialize device. */
-    printDebug("\nInitializing I2C devices...");
-    xMPU.initialize();
-
-    /* Verify connection. */
-    printDebug("\nTesting device connections...");
-    xMPU.testConnection() ? printDebug("\nMPU6050 connection successful") : printDebug("\nMPU6050 connection failed");
-
-    printDebug("\nInitializing DMP...");
-    chDevStatus = xMPU.dmpInitialize();
-
-    /* Supply your own gyro offsets here, scaled for min sensitivity. */
-    xMPU.setXGyroOffset(220);
-    xMPU.setYGyroOffset(76);
-    xMPU.setZGyroOffset(-85);
-    xMPU.setZAccelOffset(1788); // 1688 factory default for my test chip. */
-
-     /* Make sure it worked (returns 0 if so). */
-     if (ERR_NONE == chDevStatus)
-     {
-        /* Turn on the DMP, now that it's ready. */
-        xMPU.setDMPEnabled(true);
-
-        /* Enable Arduino interrupt detection. */
-        attachInterrupt(digitalPinToInterrupt(E_PIN_MPU_INTERRUPT), __int_dmpDataReadyPIR__, RISING);
-        chMPUIntStatus = xMPU.getIntStatus();
-
-        /* Set our DMP Ready flag so the main loop() function knows it's okay to use it. */
-        boDmpReady = true;
-
-        /* Get expected DMP packet size for later comparison. */
-        iPacketSize = xMPU.dmpGetFIFOPacketSize();
-         
-        #if 0 /* Uncomment afterwards for PID config. */
-            /* Setup PID. */
-            pid.SetMode(AUTOMATIC);
-            pid.SetSampleTime(10);
-            pid.SetOutputLimits(-255, 255); 
-        #endif
-     }
-     else
-     {
-         /* ERROR!
-         1 = initial memory load failed
-         2 = DMP configuration updates failed
-         (if it's going to break, usually the code will be 1). */
-         printDebug("\nDMP Initialization failed (code ");
-     }
-#endif
-     return enError;
-}
-
 /***************************************************************************
  * IMPLEMENTATION OF PUBLIC FUNCTIONS
  ****************************************************************************/
@@ -532,9 +535,6 @@ MySensors::MySensors(void)
     printDebug("\n%s [%d]",__FUNCTION__, __LINE__);
 
     /* Set input pins. */
-    #ifdef HAS_PIR
-        pinMode(E_PIN_PIR,      INPUT);
-    #endif
     #ifdef HAS_GAS
         pinMode(E_PIN_GAS,      INPUT);
     #endif
@@ -548,15 +548,16 @@ MySensors::MySensors(void)
         pinMode(E_PIN_SONAR_B,  INPUT);
     #endif
     #ifdef HAS_PIR
+        pinMode(E_PIN_PIR, INPUT);
         /* Attach interrupt to detect when PIR pin is high. */
         attachInterrupt(digitalPinToInterrupt(E_PIN_PIR), __int_readPIR__, HIGH);
     #endif
-    #ifdef HAS_MTU
-        if( ERR_NONE != enSetupMPU())
-        {
-            printError("\nError setting up the MTU.");
-        }
+    #ifdef HAS_MPU
+        pinMode(E_PIN_MPU_INTERRUPT, INPUT);
+        /* Attach interrupt to detect when PIR pin is high. */
+        attachInterrupt(digitalPinToInterrupt(E_PIN_MPU_INTERRUPT), __int_dmpDataReadyPIR__, RISING);
     #endif
+
 }
 
 tenError MySensors::enProcessSensors(void)
@@ -567,17 +568,31 @@ tenError MySensors::enProcessSensors(void)
     /* To handle multiple sonars. */
     int iSonarID = 0;
 
-    static tenStateSensors enState         = E_READ_SONAR;
+    static tenStateSensors enState         = E_READ_MPU;
     static tenStateSensors enInternalState = E_READ_SHARP;
 
     /* Cycle through all states until an invalid state is found. */
     printDebug("\n%s [%d]",__FUNCTION__, __LINE__);
-    
+
+    /* Consider moving this to constructor, after getting this to work. */
+    #ifdef HAS_MPU
+        if( ERR_NONE != enSetupMPU())
+        {
+            printError("\nError setting up the MTU.");
+        }
+    #endif
+
     while(ERR_NONE == enError)
     {
         /* Sensors state machine. */
         switch(enState)
         {
+            case E_READ_MPU:
+                /* Read sonar sensor data. */
+                enError = enReadMPU();
+
+                enState = E_READ_OTHERS;
+                break;
             case E_READ_SONAR:
                 /* Read sonar sensor data. */
                 iSonarID++;
@@ -589,12 +604,6 @@ tenError MySensors::enProcessSensors(void)
                 enError = enReadSonar(iSonarID);
 
                 enState = E_READ_MPU;
-                break;
-            case E_READ_MPU:
-                /* Read sonar sensor data. */
-                enError = enReadMPU();
-
-                enState = E_READ_OTHERS;
                 break;
             /* Separate to increase priority of sonar readings. */
             case E_READ_OTHERS:
@@ -636,7 +645,10 @@ tenError MySensors::enProcessSensors(void)
                         break;
                 }
             #endif
-                enState = E_READ_SONAR;
+                /* Let's not read the sonar for now... 
+                enState = E_READ_SONAR;*/
+
+                enState = E_READ_MPU;
                 break;
             default:
                 enError = ERR_UNK_STATE;

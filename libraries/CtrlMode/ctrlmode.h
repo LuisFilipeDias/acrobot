@@ -26,10 +26,12 @@
  ****************************************************************************/
 /* System headerfiles */
 #include <stdio.h>
+#include <stdlib.h>
 
 /* Foreign headerfiles */
 #include <acrobot.h>
 #include <motors.h>
+#include <PID_v1.h>
 
 /* Own headerfiles */
 /* None */
@@ -55,12 +57,6 @@ class CtrlMode{
         * @brief Right/Left motor adjustment.
         */
         float flAdj;
-
-        /**
-        * @brief Motors object references.
-        */
-        // Motors *oMotors[E_M_COUNT];
-
 
         /**
         * @brief Wrapper of motors: single point of configuration for all 3 motors.
@@ -131,10 +127,8 @@ class CtrlMode{
          ****************************************************************************/
         /**
         * @brief Class constructor.
-        *
-        * @param[oLocMotors]        motors object array;
         */
-        CtrlMode(void);//Motors oLocMotors[E_M_COUNT]);
+        CtrlMode(void);
 
         /**
         * @brief Configure manual control mode.
@@ -148,6 +142,14 @@ class CtrlMode{
         */
         tenError enSetCtrl(bool boisAuto, float flSpeed[E_M_COUNT], float flSenseFront, float flSenseBottom);
 
+        /**
+        * @brief Setup the PID with angle info.
+        *
+        * @param[flAngle]           desired agle to maintain;
+        *
+        * @returns Error code.
+        */
+        tenError enSetPID(float flAngle);
 };
 
 #endif /* CTRLMODE_H */
