@@ -53,10 +53,6 @@ typedef enum
 
 class CtrlMode{
     private:
-        /**
-        * @brief Right/Left motor adjustment.
-        */
-        float flAdj;
 
         /**
         * @brief Wrapper of motors: single point of configuration for all 3 motors.
@@ -66,60 +62,6 @@ class CtrlMode{
         * @returns Error code.
         */
         tenError enMotorsWrapper(float flSpeed[E_M_COUNT]);
-
-        /**
-        * @brief Configure manual control mode.
-        *
-        * @param[flSpeed[E_M_COUNT]]  motor power array;
-        *
-        * @returns Error code.
-        */
-        tenError enManualCtrl(float flSpeed[E_M_COUNT]);
-
-        /**
-        * @brief Configure manual control mode.
-        *
-        * @param[flSenseFront]       front sensor reading;
-        * @param[flSenseBottom]      bottom sensor reading;
-        *
-        * @returns Error code.
-        */
-        tenError enAutoCtrl(float flSenseFront, float flSenseBottom);
-
-        /**
-        * @brief Set motors for mode FWD.
-        *
-        * @returns Error code.
-        */
-        tenError enModeFwd(void);
-
-        /**
-        * @brief Set motors for mode RANDOM.
-        *
-        * @returns Error code.
-        */
-        tenError enModeRandom(void);
-
-        /**
-        * @brief Set motors for mode GROUND IN SIGHT.
-        *
-        * @returns Error code.
-        */
-        tenError enModeGround(void);
-
-        /**
-        * @brief Set motors for mode WALL IN SIGHT.
-        *
-        * @returns Error code.
-        */
-        tenError enModeWall(void);
-
-        /**
-        * @brief Go manual from auto.
-        *
-        * @returns Error code.
-        */
-        tenError enGoManual(void);
 
     public:
         /***************************************************************************
@@ -133,23 +75,21 @@ class CtrlMode{
         /**
         * @brief Configure manual control mode.
         *
-        * @param[boIsAuto]               change of mode toggler;
-        * @param[flSpeed[E_M_COUNT]]     motor power array;
-        * @param[flSenseFront]           front sensor distance;
-        * @param[flSenseBottom]          bottom sensor distance;
+        * @param[flDirection]          direction of wheels (right/left);
         *
         * @returns Error code.
         */
-        tenError enSetCtrl(bool boisAuto, float flSpeed[E_M_COUNT], float flSenseFront, float flSenseBottom);
+        tenError enSetCtrl(float flDirection);
 
         /**
         * @brief Setup the PID with angle info.
         *
         * @param[flAngle]           desired agle to maintain;
+        * @param[flSpeed]           rough means to make it move;
         *
         * @returns Error code.
         */
-        tenError enSetPID(float flAngle);
+        tenError enSetPID(float flAngle, float flSpeed);
 };
 
 #endif /* CTRLMODE_H */

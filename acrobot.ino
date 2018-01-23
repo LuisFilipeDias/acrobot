@@ -270,19 +270,28 @@ void vTaskMotors(void *parameter)
                 /* Get bluetooth control commands. */
                 enError = oBlueCtrl.enGetCtrlCmd();
             #endif
-                enState = E_SET_MOTORS;
-                break;
-            case E_SET_PID:
-                oCtrlMode.enSetPID(oSensors.flGetAnglePitch());
                 enState = E_SET_PID;
                 break;
+            case E_SET_PID:
+                /* Stay put. */
+                oCtrlMode.enSetPID(oSensors.flGetAnglePitch(), 20);
+
+                #if 0
+                /* Future implementation. */
+                /* Balance forward, with angle of 20. */
+                oCtrlMode.enSetPID(oSensors.flGetAnglePitch(), 20);
+
+                /* Balance backward, with angle of 20. */
+                oCtrlMode.enSetPID(oSensors.flGetAnglePitch(), -20);
+
+                #endif
+
+                enState = E_SET_MOTORS;
+                break;
             case E_SET_MOTORS:
-                /* TODO: use as input, the left-right control, and the setpoint. See below for a more complex approach. */
-
-
                 /* Setup using the PID retrieved values. */
-                // /* Set the motors control, note that mode is set internally, so pass all the info at this level. */
-                // enError = oCtrlMode.enSetCtrl(boIsAuto, flSpeedAdj, oSensors.flGetSonarA(), oSensors.flGetSonarC());
+                /* Set direction to 0 to simply balance. */
+                enError = oCtrlMode.enSetCtrl(0);
 
                 enState = E_REFRESH_DISPLAY;
                 break;

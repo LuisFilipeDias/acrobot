@@ -273,7 +273,7 @@ tenError MySensors::enReadMPU(void)
                 oMPU.dmpGetYawPitchRoll(flYPR, &xQuaternion, &xGravity);
 
                 stSensors.flAnglePitch = flYPR[1] * 180/M_PI;
-                printf("\nflYPR[1] - Pitch: %2.2f\t", stSensors.flAnglePitch);
+                printDebug("\nflYPR[1] - Pitch: %2.2f\t", stSensors.flAnglePitch);
             }
         }
     }

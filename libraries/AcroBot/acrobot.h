@@ -268,9 +268,8 @@ typedef enum
 {
     E_MOTOR_LEFT                            = 0,
     E_MOTOR_RIGHT                           = 1,
-    E_MOTOR_BOTTOM                          = 2,
 
-    E_MOTOR_COUNT                           = 3
+    E_MOTOR_COUNT                           = 2
 } tenMotor;
 
 /**

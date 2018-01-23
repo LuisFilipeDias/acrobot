@@ -30,42 +30,39 @@
 /* Own headerfiles */
 #include <ctrlmode.h>
 
-/* Must rethink this. */
-#if 0
+/* Collection of motor objects. */
 Motors        oMotorLeft  (E_MOTOR_LEFT, MOTOR_UNIT_A, MOTOR_TIMER_A, MOTOR_PWMFWD_A, MOTOR_PWMBWD_A, E_PIN_MOTORFWD_A, E_PIN_MOTORBWD_A);
 Motors        oMotorRight (E_MOTOR_RIGHT, MOTOR_UNIT_B, MOTOR_TIMER_B, MOTOR_PWMFWD_B, MOTOR_PWMBWD_B, E_PIN_MOTORFWD_B, E_PIN_MOTORBWD_B);
-Motors        oMotorBottom(E_MOTOR_BOTTOM, MOTOR_UNIT_C, MOTOR_TIMER_C, MOTOR_PWMFWD_C, MOTOR_PWMBWD_C, E_PIN_MOTORFWD_C, E_PIN_MOTORBWD_C);
-Motors        oMotors[E_MOTOR_COUNT] = {oMotorLeft, oMotorRight, oMotorBottom};
+Motors        oMotors[E_MOTOR_COUNT] = {oMotorLeft, oMotorRight};
 
 bool boIsWall = false;
 bool boIsWallToggle = true;
-#endif
 
-double dblOriSetpoint = 173;
+double dblOriSetpoint = 1.5;
 double dblSetpoint = dblOriSetpoint;
-double dblInput, dblOutput;
+double dblInputAngle, dblOutputSpeed;
 
 //adjust these values to fit your own design
-double Kp = 50;
-double Kd = 1.4;
-double Ki = 60;
+double Kp = 10;
+double Kd = 0;
+// double Kd = 1.4;
+double Ki = 0;
+// double Ki = 60;
 
-PID oPID(&dblInput, &dblInput, &dblSetpoint, Kp, Ki, Kd, DIRECT);
+PID oPID(&dblInputAngle, &dblOutputSpeed, &dblSetpoint, Kp, Ki, Kd, DIRECT);
 
 /***************************************************************************
  * C IMPLEMENTATION OF PRIVATE FUNCTIONS
  ****************************************************************************/
 tenError CtrlMode::enMotorsWrapper(float flSpeed[E_MOTOR_COUNT])
 {
-    /* Must rethink this. */
-    #if 0
     /* Init function with no error. */
     tenError enError = ERR_NONE;
 
     printDebug("\n%s [%d]",__FUNCTION__, __LINE__);
 
     /* Adjust left motor speed. */
-    flSpeed[E_MOTOR_LEFT] = flSpeed[E_MOTOR_LEFT] * flAdj;
+    // flSpeed[E_MOTOR_LEFT] = flSpeed[E_MOTOR_LEFT] * flAdj;
 
     /* Stop all motors. */
     for (int i = 0; i < E_MOTOR_COUNT; i++)
@@ -88,191 +85,6 @@ tenError CtrlMode::enMotorsWrapper(float flSpeed[E_MOTOR_COUNT])
         }
     }
     return enError;
-    #endif
-}
-
-tenError CtrlMode::enManualCtrl(float flSpeed[E_MOTOR_COUNT])
-{
-    /* Must rethink this. */
-    #if 0
-    /* Init function with no error. */
-    tenError enError = ERR_NONE;
-
-    printDebug("\n%s [%d]",__FUNCTION__, __LINE__);
-
-    return CtrlMode::enMotorsWrapper(flSpeed);
-    #endif
-}
-
-tenError CtrlMode::enAutoCtrl(float flSenseFront, float flSenseBottom)
-{
-    /* Must rethink this. */
-    #if 0
-    /* Init function with no error. */
-    tenError enError = ERR_NONE;
-
-    /* Initial state is init. */
-    static tenCtrlStates enState = E_M_START;
-
-    static int iFwdTime = 0, iRandomTime = 0;
-
-    printDebug("\n%s [%d]",__FUNCTION__, __LINE__);
-   
-    /* If ground is getting close...go up, else stay put. */
-    if (flSenseBottom < SENSE_BOTTOM)
-    {
-        enState = E_M_OBS_GROUND;
-    }
-    /* If there is an obstacle in defined horizontal distance. */
-    else if (flSenseFront < SENSE_FRONT)
-    {
-        enState = E_M_OBS_WALL;
-    }
-
-    /* Main state machine. */
-    switch(enState)
-    {
-        case E_M_START:
-            enState = E_M_FWD;
-            break;
-        case E_M_FWD:
-            enError = CtrlMode::enModeFwd();
-            /* Check if 5 seconds have passed. */
-            if (xTaskGetTickCount() - iFwdTime > TIME_10_SECONDS_MS)
-            {
-                iRandomTime = xTaskGetTickCount();
-                enState = E_M_RANDOM;
-            }
-            break;
-        case E_M_RANDOM:
-            enError = CtrlMode::enModeRandom();
-            /* Check if 2 seconds have passed. */
-            if (xTaskGetTickCount() - iRandomTime > TIME_2_SECONDS_MS)
-            {
-                iFwdTime = xTaskGetTickCount();
-                enState = E_M_FWD;
-            }
-            break;
-        case E_M_OBS_GROUND:
-            enError = CtrlMode::enModeGround();
-            iFwdTime = xTaskGetTickCount();
-            enState = E_M_FWD;
-            break;
-        case E_M_OBS_WALL:
-            enError = CtrlMode::enModeWall();
-            iFwdTime = xTaskGetTickCount();
-            enState = E_M_FWD;
-            break;
-        default:
-            enState = E_M_START;
-            break;
-    }
-
-    return enError;
-    #endif
-}
-
-tenError CtrlMode::enModeFwd(void)
-{
-    /* Must rethink this. */
-    #if 0
-    float flSpeedZeros[E_MOTOR_COUNT] = {0, 0, 0};
-    float flSpeedFwd[E_MOTOR_COUNT] = {MOTOR_AUTO_FWD, MOTOR_AUTO_FWD2, 0};
-    float flSpeedWall[E_MOTOR_COUNT] = {-MOTOR_AUTO_FWD, MOTOR_AUTO_FWD2, 0};
-    float flSpeedWallInv[E_MOTOR_COUNT] = {MOTOR_AUTO_FWD, -MOTOR_AUTO_FWD2, 0};
-
-    /* Init function with no error. */
-    tenError enError = ERR_NONE;
-
-    printDebug("\n%s [%d]",__FUNCTION__, __LINE__);
-
-    static char chCnt = 0;
-
-    chCnt++;
-
-    if(boIsWall)
-    {
-        if(chCnt == 3)
-        {
-            chCnt = 0;
-            boIsWall = false;
-            boIsWallToggle = ! boIsWallToggle;
-            enError = CtrlMode::enMotorsWrapper(flSpeedZeros);
-        }
-        else
-        {
-            if(boIsWallToggle)
-            {
-                enError = CtrlMode::enMotorsWrapper(flSpeedWallInv);
-            }
-            else
-            {
-                enError = CtrlMode::enMotorsWrapper(flSpeedWall);
-            }
-        }
-    }
-    else
-    {
-        enError = CtrlMode::enMotorsWrapper(flSpeedFwd);
-    }
-
-    return enError;
-    #endif
-}
-
-tenError CtrlMode::enModeRandom(void)
-{
-    /* Must rethink this. */
-    #if 0
-    /* TODO: got to randomize this. */
-    float flSpeed[E_MOTOR_COUNT] = {0, 0, 0};
-    
-    printDebug("\n%s [%d]",__FUNCTION__, __LINE__);
-
-    /* Go Random. */
-    return CtrlMode::enMotorsWrapper(flSpeed);
-    #endif
-}
-
-tenError CtrlMode::enModeGround(void)
-{
-    /* Must rethink this. */
-    #if 0
-    float flSpeed[E_MOTOR_COUNT] = {0, 0, MOTOR_AUTO_GROUND};
-
-    printDebug("\n%s [%d]",__FUNCTION__, __LINE__);
-
-    return CtrlMode::enMotorsWrapper(flSpeed);
-    #endif
-}
-
-tenError CtrlMode::enModeWall(void)
-{
-    /* Must rethink this. */
-    #if 0
-    float flSpeedZeros[E_MOTOR_COUNT] = {0, 0, 0};
-    float flSpeedFwd[E_MOTOR_COUNT] = {MOTOR_AUTO_FWD, MOTOR_AUTO_FWD2, 0};
-    float flSpeedWall[E_MOTOR_COUNT] = {-MOTOR_AUTO_FWD, MOTOR_AUTO_FWD2, 0};
-    float flSpeedWallInv[E_MOTOR_COUNT] = {MOTOR_AUTO_FWD, -MOTOR_AUTO_FWD2, 0};
-
-    /* Init function with no error. */
-    tenError enError = ERR_NONE;
-
-    printDebug("\n%s [%d]",__FUNCTION__, __LINE__);
-
-    boIsWall = true;
-
-    if(boIsWallToggle)
-    {
-        enError = CtrlMode::enMotorsWrapper(flSpeedWall);
-    }
-    else
-    {
-        enError = CtrlMode::enMotorsWrapper(flSpeedWallInv);
-    }
-
-    return enError;
-    #endif
 }
 
 /***************************************************************************
@@ -292,32 +104,39 @@ CtrlMode::CtrlMode(void)
     oPID.SetOutputLimits(-255, 255); 
 }
 
-tenError CtrlMode::enSetCtrl(bool boIsAuto, float flSpeed[E_MOTOR_COUNT], float flSenseFront, float flSenseBottom)
+tenError CtrlMode::enSetCtrl(float flDirection)
 {
-    /* Must rethink this. */
-    #if 0
     /* Init function with no error. */
     tenError enError = ERR_NONE;
 
+    float aflSpeed[E_MOTOR_COUNT];
+
+    /* flDirection is a [-1, 1] variable that defines the direction. */
+    /* Left is 0% to 200%. */
+    aflSpeed[E_MOTOR_LEFT]  = dblOutputSpeed * (1 + flDirection);
+
+    /* Right is 200% to 0%. */
+    aflSpeed[E_MOTOR_RIGHT] = dblOutputSpeed * (1 - flDirection);
+
     printDebug("\n%s [%d]",__FUNCTION__, __LINE__);
 
-    if (boIsAuto)
-    {
-        enError = CtrlMode::enAutoCtrl(flSenseFront, flSenseBottom);
-    }    
-    else
-    {
-        enError = CtrlMode::enManualCtrl(flSpeed);
-    }
+    /* Get Pid output but also get direction. */
+
+    enError = CtrlMode::enMotorsWrapper(aflSpeed);
 
     return enError;
-    #endif
 }
 
-tenError CtrlMode::enSetPID(float flAngle)
+tenError CtrlMode::enSetPID(float flAngle, float flSpeed)
 {
-    dblInput = (double) flAngle;
+    /* Raw mechanism to convert speed to angle setpoint - speed [0,100] directly converted to angle. */
+    dblSetpoint = flSpeed;
+
+    dblInputAngle = (double) flAngle;
+    printf("\nIN -> dblInputAngle: %4.4f", dblInputAngle);
 
     /* Set oPID and save oPID configuration here. */
     oPID.Compute();
+
+    printf("\tOUT -> dblOutputSpeed: %4.4f", dblOutputSpeed);
 }
