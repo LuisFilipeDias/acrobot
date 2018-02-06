@@ -175,7 +175,12 @@ tenError MySensors::enSetupMPU(void)
 
     /* Verify connection. */
     printf("\nTesting device connections...");
-    oMPU.testConnection() ? printDebug("\nMPU6050 connection successful") : printDebug("\nMPU6050 connection failed");
+    // oMPU.testConnection() ? printDebug("\nMPU6050 connection successful") : printDebug("\nMPU6050 connection failed");
+    if(oMPU.testConnection() == false)
+    {
+        printf("\n\nMPU6050 connection failed");
+        return ERR_NONE;
+    }    
 
     printf("\nInitializing DMP...");
     chDevStatus = oMPU.dmpInitialize();
@@ -273,7 +278,7 @@ tenError MySensors::enReadMPU(void)
                 oMPU.dmpGetYawPitchRoll(flYPR, &xQuaternion, &xGravity);
 
                 stSensors.flAnglePitch = flYPR[1] * 180/M_PI;
-                printDebug("\nflYPR[1] - Pitch: %2.2f\t", stSensors.flAnglePitch);
+                printf("\nflYPR[1] - Pitch: %2.2f\t", stSensors.flAnglePitch);
             }
         }
     }
@@ -692,6 +697,11 @@ float MySensors::flGetSonarC(void)
 float MySensors::flGetAnglePitch(void)
 {
     return stSensors.flAnglePitch;
+}
+
+float MySensors::flGetSpeedPitch(void)
+{
+    return stSensors.flSpeedPitch;
 }
 
 String MySensors::sBuildMsg(void)

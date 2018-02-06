@@ -6,7 +6,7 @@
  *
  *  @author     Luis Filipe Dias
  *
- *  @date       30-08-2017
+ *  @date       07-01-2018
  *
  *  @version    2.0
  *  
@@ -48,7 +48,7 @@
 /**
 * @brief Actual Verbose level.
 */
-#define VERBOSE_LEVEL                       VERBOSE_INFO
+#define VERBOSE_LEVEL                       VERBOSE_ERROR
 
 /**
 * @brief Verbose traces activation. (To avoid compilation errors, disable Compiler Warnings on the Arduino definitions)

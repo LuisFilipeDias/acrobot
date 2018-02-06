@@ -85,11 +85,12 @@ class CtrlMode{
         * @brief Setup the PID with angle info.
         *
         * @param[flAngle]           desired agle to maintain;
-        * @param[flSpeed]           rough means to make it move;
+        * @param[flActualSpeed]     current speed;
+        * @param[flDesiredSpeed]    actual speed;
         *
         * @returns Error code.
         */
-        tenError enSetPID(float flAngle, float flSpeed);
+        tenError enSetPID(float flAngle, float flActualSpeed, float flDesiredSpeed);
 };
 
 #endif /* CTRLMODE_H */

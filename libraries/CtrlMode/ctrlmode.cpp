@@ -38,18 +38,33 @@ Motors        oMotors[E_MOTOR_COUNT] = {oMotorLeft, oMotorRight};
 bool boIsWall = false;
 bool boIsWallToggle = true;
 
-double dblOriSetpoint = 1.5;
-double dblSetpoint = dblOriSetpoint;
-double dblInputAngle, dblOutputSpeed;
+/*
+dblMeasuredSpeed -> [  PID  ] -> dblSetpointAngle
+dblSetpointSpeed -> [       ]
 
-//adjust these values to fit your own design
-double Kp = 10;
-double Kd = 0;
-// double Kd = 1.4;
-double Ki = 0;
-// double Ki = 60;
+dblMeasuredAngle -> [  PID  ] -> dblOutputMotorPower
+dblSetpointAngle -> [       ]
+*/
 
-PID oPID(&dblInputAngle, &dblOutputSpeed, &dblSetpoint, Kp, Ki, Kd, DIRECT);
+double dblMeasuredSpeed;
+double dblOriSetpointSpeed = 0;
+double dblSetpointSpeed = dblOriSetpointSpeed;
+double dblSetpointAngle;
+double dblMeasuredAngle, dblOutputMotorPower;
+
+/* Must gradually adjust these values: start by KpAngle, then KiAngle finally KdAngle - search for this info somewhere. */
+double KpAngle = 10;
+double KdAngle = 0;
+// double KdAngle = 1.4;
+double KiAngle = 0;
+// double KiAngle = 60;
+
+double KpSpeed = 10;
+double KdSpeed = 0;
+double KiSpeed = 0;
+
+PID oPIDSpeed(&dblMeasuredSpeed, &dblSetpointAngle, &dblSetpointSpeed, KpSpeed, KiSpeed, KdSpeed, DIRECT);
+PID oPIDAngle(&dblMeasuredAngle, &dblOutputMotorPower, &dblSetpointAngle, KpAngle, KiAngle, KdAngle, DIRECT);
 
 /***************************************************************************
  * C IMPLEMENTATION OF PRIVATE FUNCTIONS
@@ -98,10 +113,10 @@ CtrlMode::CtrlMode(void)
     flAdj = 1 + (float)(MOTOR_ADJ_PC)/100;
     #endif
 
-    /* Setup oPID. */
-    oPID.SetMode(AUTOMATIC);
-    oPID.SetSampleTime(10);
-    oPID.SetOutputLimits(-255, 255); 
+    /* Setup oPIDAngle. */
+    oPIDAngle.SetMode(AUTOMATIC);
+    oPIDAngle.SetSampleTime(10);
+    oPIDAngle.SetOutputLimits(-255, 255); 
 }
 
 tenError CtrlMode::enSetCtrl(float flDirection)
@@ -113,10 +128,10 @@ tenError CtrlMode::enSetCtrl(float flDirection)
 
     /* flDirection is a [-1, 1] variable that defines the direction. */
     /* Left is 0% to 200%. */
-    aflSpeed[E_MOTOR_LEFT]  = dblOutputSpeed * (1 + flDirection);
+    aflSpeed[E_MOTOR_LEFT]  = dblOutputMotorPower * (1 + flDirection);
 
     /* Right is 200% to 0%. */
-    aflSpeed[E_MOTOR_RIGHT] = dblOutputSpeed * (1 - flDirection);
+    aflSpeed[E_MOTOR_RIGHT] = dblOutputMotorPower * (1 - flDirection);
 
     printDebug("\n%s [%d]",__FUNCTION__, __LINE__);
 
@@ -127,16 +142,22 @@ tenError CtrlMode::enSetCtrl(float flDirection)
     return enError;
 }
 
-tenError CtrlMode::enSetPID(float flAngle, float flSpeed)
+tenError CtrlMode::enSetPID(float flAngle, float flActualSpeed, float flDesiredSpeed)
 {
-    /* Raw mechanism to convert speed to angle setpoint - speed [0,100] directly converted to angle. */
-    dblSetpoint = flSpeed;
+    /* Save the actual speed. */
+    dblMeasuredSpeed = (double) flActualSpeed;
 
-    dblInputAngle = (double) flAngle;
-    printf("\nIN -> dblInputAngle: %4.4f", dblInputAngle);
+    /* Save the setpoint speed. */
+    dblSetpointSpeed = (double) flDesiredSpeed;
 
-    /* Set oPID and save oPID configuration here. */
-    oPID.Compute();
+    /* Calculate the Angle set point, based on the speed. */
+    oPIDSpeed.Compute();
 
-    printf("\tOUT -> dblOutputSpeed: %4.4f", dblOutputSpeed);
+    /* Save the setpoint angle. */
+    dblMeasuredAngle = (double) flAngle;
+
+    /* Calculate the motor power based on the angle difference. */
+    oPIDAngle.Compute();
+
+    // printf("\tOUT -> dblOutputMotorPower: %4.4f", dblOutputMotorPower);
 }

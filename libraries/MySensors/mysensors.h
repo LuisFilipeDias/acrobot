@@ -94,6 +94,7 @@ typedef struct{
     float  aflDistSonar[E_SONAR_COUNT];
     float  flTemperature;
     float  flAnglePitch;
+    float  flSpeedPitch;
 } tstSensors;
 
 class MySensors{
@@ -215,6 +216,13 @@ class MySensors{
         * @returns Angle in degrees.
         */
         float flGetAnglePitch(void);
+
+        /**
+        * @brief Get MPU pitch speed.
+        *
+        * @returns Speed in m/s.
+        */
+        float flGetSpeedPitch(void);
 
         /**
         * @brief The sensors state machine, that iterates over every sensor read function.
