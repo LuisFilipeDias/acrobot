@@ -274,7 +274,7 @@ void vTaskMotors(void *parameter)
                 break;
             case E_SET_PID:
                 /* Stay put. */
-                oCtrlMode.enSetPID(oSensors.flGetAnglePitch(), oSensors.flGetSpeedPitch(), 10); /* last param is test speed. */
+                oCtrlMode.enSetPID(oSensors.flGetAnglePitch(), oSensors.flGetSpeedPitch(), 0); /* last param is test speed. */
 
                 #if 0
                 /* Future implementation. */

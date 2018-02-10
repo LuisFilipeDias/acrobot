@@ -53,7 +53,7 @@ double dblSetpointAngle;
 double dblMeasuredAngle, dblOutputMotorPower;
 
 /* Must gradually adjust these values: start by KpAngle, then KiAngle finally KdAngle - search for this info somewhere. */
-double KpAngle = 10;
+double KpAngle = 3;
 double KdAngle = 0;
 // double KdAngle = 1.4;
 double KiAngle = 0;
@@ -93,6 +93,8 @@ tenError CtrlMode::enMotorsWrapper(float flSpeed[E_MOTOR_COUNT])
         /* Act on respective motor. */
         enError = oMotors[i].enConfigMotor(flSpeed[i], chDir[i]);
 
+        // printf("\nflSpeed[%d] = %2.2f", i, flSpeed[i]);
+
         /* Failed to config a motor, abort. */
         if (ERR_NONE != enError)
         {
@@ -125,6 +127,10 @@ tenError CtrlMode::enSetCtrl(float flDirection)
     tenError enError = ERR_NONE;
 
     float aflSpeed[E_MOTOR_COUNT];
+    double dblPower = dblOutputMotorPower;
+
+    /* Limit to 100% max, as this is a duty-cycle. */
+    dblPower = (dblPower > 100) ? 100 : dblPower;
 
     /* flDirection is a [-1, 1] variable that defines the direction. */
     /* Left is 0% to 200%. */
@@ -150,14 +156,20 @@ tenError CtrlMode::enSetPID(float flAngle, float flActualSpeed, float flDesiredS
     /* Save the setpoint speed. */
     dblSetpointSpeed = (double) flDesiredSpeed;
 
+    printf("\nInput\t\t\t\tOutput\t\t\t\tSetpoint");
+    printf("\ndblMeasuredSpeed: %4.2f\tdblSetpointAngle: %4.2f\t\tdblSetpointSpeed: %4.2f", dblMeasuredSpeed, dblSetpointAngle, dblSetpointSpeed);
+
     /* Calculate the Angle set point, based on the speed. */
     oPIDSpeed.Compute();
 
     /* Save the setpoint angle. */
     dblMeasuredAngle = (double) flAngle;
 
+    printf("\ndblMeasuredAngle: %4.2f\tdblOutputMotorPower: %4.2f\tdblSetpointAngle: %4.2f", dblMeasuredAngle, dblOutputMotorPower, dblSetpointAngle);
+
     /* Calculate the motor power based on the angle difference. */
     oPIDAngle.Compute();
 
     // printf("\tOUT -> dblOutputMotorPower: %4.4f", dblOutputMotorPower);
 }
+
