@@ -156,8 +156,8 @@ tenError CtrlMode::enSetPID(float flAngle, float flActualSpeed, float flDesiredS
     /* Save the setpoint speed. */
     dblSetpointSpeed = (double) flDesiredSpeed;
 
-    // printf("\nInput\t\t\t\tOutput\t\t\t\tSetpoint");
-    // printf("\ndblMeasuredSpeed: %4.2f\tdblSetpointAngle: %4.2f\t\tdblSetpointSpeed: %4.2f", dblMeasuredSpeed, dblSetpointAngle, dblSetpointSpeed);
+    printf("\nInput\t\t\t\tOutput\t\t\t\tSetpoint");
+    printf("\ndblMeasuredSpeed: %4.2f\tdblSetpointAngle: %4.2f\t\tdblSetpointSpeed: %4.2f", dblMeasuredSpeed, dblSetpointAngle, dblSetpointSpeed);
 
     /* Calculate the Angle set point, based on the speed. */
     oPIDSpeed.Compute();
@@ -165,7 +165,7 @@ tenError CtrlMode::enSetPID(float flAngle, float flActualSpeed, float flDesiredS
     /* Save the setpoint angle. */
     dblMeasuredAngle = (double) flAngle;
 
-    // printf("\ndblMeasuredAngle: %4.2f\tdblOutputMotorPower: %4.2f\tdblSetpointAngle: %4.2f", dblMeasuredAngle, dblOutputMotorPower, dblSetpointAngle);
+    printf("\ndblMeasuredAngle: %4.2f\tdblOutputMotorPower: %4.2f\tdblSetpointAngle: %4.2f", dblMeasuredAngle, dblOutputMotorPower, dblSetpointAngle);
 
     /* Calculate the motor power based on the angle difference. */
     oPIDAngle.Compute();
