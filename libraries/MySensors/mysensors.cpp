@@ -157,6 +157,97 @@ int iCurrentQuality = -1;
 /***************************************************************************
  * IMPLEMENTATION OF PRIVATE FUNCTIONS
  ****************************************************************************/
+
+
+
+
+
+int16_t ax, ay, az,gx, gy, gz;
+
+int mean_ax,mean_ay,mean_az,mean_gx,mean_gy,mean_gz,state=0;
+int ax_offset,ay_offset,az_offset,gx_offset,gy_offset,gz_offset;
+int buffersize=1000;     //Amount of readings used to average, make it higher to get more precision but sketch will be slower  (default:1000)
+int acel_deadzone=8;     //Acelerometer error allowed, make it lower to get more precision, but sketch may not converge  (default:8)
+int giro_deadzone=1;     //Giro error allowed, make it lower to get more precision, but sketch may not converge  (default:1)
+void meansensors(){
+  long i=0,buff_ax=0,buff_ay=0,buff_az=0,buff_gx=0,buff_gy=0,buff_gz=0;
+
+  while (i<(buffersize+101)){
+    // read raw accel/gyro measurements from device
+    oMPU.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+    
+    if (i>100 && i<=(buffersize+100)){ //First 100 measures are discarded
+      buff_ax=buff_ax+ax;
+      buff_ay=buff_ay+ay;
+      buff_az=buff_az+az;
+      buff_gx=buff_gx+gx;
+      buff_gy=buff_gy+gy;
+      buff_gz=buff_gz+gz;
+    }
+    if (i==(buffersize+100)){
+      mean_ax=buff_ax/buffersize;
+      mean_ay=buff_ay/buffersize;
+      mean_az=buff_az/buffersize;
+      mean_gx=buff_gx/buffersize;
+      mean_gy=buff_gy/buffersize;
+      mean_gz=buff_gz/buffersize;
+    }
+    i++;
+    delay(2); //Needed so we don't get repeated measures
+  }
+}
+
+void calibration(){
+  ax_offset=-mean_ax/8;
+  ay_offset=-mean_ay/8;
+  az_offset=(16384-mean_az)/8;
+
+  gx_offset=-mean_gx/4;
+  gy_offset=-mean_gy/4;
+  gz_offset=-mean_gz/4;
+  while (1){
+    int ready=0;
+    oMPU.setXAccelOffset(ax_offset);
+    oMPU.setYAccelOffset(ay_offset);
+    oMPU.setZAccelOffset(az_offset);
+
+    oMPU.setXGyroOffset(gx_offset);
+    oMPU.setYGyroOffset(gy_offset);
+    oMPU.setZGyroOffset(gz_offset);
+
+    meansensors();
+    Serial.println("...");
+
+    if (abs(mean_ax)<=acel_deadzone) ready++;
+    else ax_offset=ax_offset-mean_ax/acel_deadzone;
+
+    if (abs(mean_ay)<=acel_deadzone) ready++;
+    else ay_offset=ay_offset-mean_ay/acel_deadzone;
+
+    if (abs(16384-mean_az)<=acel_deadzone) ready++;
+    else az_offset=az_offset+(16384-mean_az)/acel_deadzone;
+
+    if (abs(mean_gx)<=giro_deadzone) ready++;
+    else gx_offset=gx_offset-mean_gx/(giro_deadzone+1);
+
+    if (abs(mean_gy)<=giro_deadzone) ready++;
+    else gy_offset=gy_offset-mean_gy/(giro_deadzone+1);
+
+    if (abs(mean_gz)<=giro_deadzone) ready++;
+    else gz_offset=gz_offset-mean_gz/(giro_deadzone+1);
+
+    if (ready==6) break;
+  }
+}
+
+
+
+
+
+
+
+
+
 tenError MySensors::enSetupMPU(void)
 {
     /* Init function with no error. */
@@ -188,11 +279,101 @@ tenError MySensors::enSetupMPU(void)
     printf("\nInitializing DMP...");
     chDevStatus = oMPU.dmpInitialize();
 
+
+    /* Calibration block. */
+    while(1)
+    {
+
+        oMPU.setXGyroOffset(0);
+        oMPU.setYGyroOffset(0);
+        oMPU.setZGyroOffset(0);
+        oMPU.setXAccelOffset(0);
+        oMPU.setYAccelOffset(0);
+        oMPU.setZAccelOffset(0);
+
+
+        /* Make sure it worked (returns 0 if so). */
+         if (ERR_NONE == chDevStatus)
+         {
+            /* Turn on the DMP, now that it's ready. */
+            oMPU.setDMPEnabled(true);
+
+            chMPUIntStatus = oMPU.getIntStatus();
+
+            /* Set our DMP Ready flag so the main loop() function knows it's okay to use it. */
+            boDmpReady = true;
+
+            /* Get expected DMP packet size for later comparison. */
+            iPacketSize = oMPU.dmpGetFIFOPacketSize();
+         }
+         else
+         {
+             /* ERROR!
+             1 = initial memory load failed
+             2 = DMP configuration updates failed
+             (if it's going to break, usually the code will be 1). */
+             printError("\nDMP Initialization failed.");
+         }
+
+        while(1)
+        {
+            if (state==0){
+                Serial.println("\nReading sensors for first time...");
+                meansensors();
+                state++;
+                delay(1000);
+              }
+
+              if (state==1) {
+                Serial.println("\nCalculating offsets...");
+                calibration();
+                state++;
+                delay(1000);
+              }
+
+              if (state==2) {
+                meansensors();
+                Serial.println("\nFINISHED!");
+                Serial.print("\nSensor readings with offsets:\t");
+                Serial.print(mean_ax); 
+                Serial.print("\t");
+                Serial.print(mean_ay); 
+                Serial.print("\t");
+                Serial.print(mean_az); 
+                Serial.print("\t");
+                Serial.print(mean_gx); 
+                Serial.print("\t");
+                Serial.print(mean_gy); 
+                Serial.print("\t");
+                Serial.println(mean_gz);
+                Serial.print("Your offsets:\t");
+                Serial.print(ax_offset); 
+                Serial.print("\t");
+                Serial.print(ay_offset); 
+                Serial.print("\t");
+                Serial.print(az_offset); 
+                Serial.print("\t");
+                Serial.print(gx_offset); 
+                Serial.print("\t");
+                Serial.print(gy_offset); 
+                Serial.print("\t");
+                Serial.println(gz_offset); 
+                Serial.println("\nData is printed as: acelX acelY acelZ giroX giroY giroZ");
+                Serial.println("Check that your sensor readings are close to 0 0 16384 0 0 0");
+                Serial.println("If calibration was succesful write down your offsets so you can set them in your projects using something similar to mpu.setXAccelOffset(youroffset)");
+                while (1);
+              }
+        }
+
+    }
+
     /* Supply your own gyro offsets here, scaled for min sensitivity. */
-    oMPU.setXGyroOffset(220);
-    oMPU.setYGyroOffset(76);
-    oMPU.setZGyroOffset(-85);
-    oMPU.setZAccelOffset(1788); // 1688 factory default for my test chip. */
+    oMPU.setXGyroOffset(-6);
+    oMPU.setYGyroOffset(39);
+    oMPU.setZGyroOffset(-45);
+    oMPU.setXAccelOffset(481); // 1688 factory default for my test chip. */
+    oMPU.setYAccelOffset(-739); // 1688 factory default for my test chip. */
+    oMPU.setZAccelOffset(742); // 1688 factory default for my test chip. */
 
      /* Make sure it worked (returns 0 if so). */
      if (ERR_NONE == chDevStatus)
